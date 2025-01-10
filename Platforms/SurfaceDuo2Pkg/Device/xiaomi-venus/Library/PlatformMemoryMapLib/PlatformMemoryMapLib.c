@@ -3,6 +3,16 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
 
+// 定义内存相关的标识符
+#define AddMem             0x1
+#define AddDev             0x2
+#define SYS_MEM            0x3
+#define MMIO               0x4
+#define Conv               0x5
+#define NS_DEVICE          0x6
+#define WriteBack          0x7
+#define UNCACHED           0x8
+
 // 定义 DEVICE_MEMORY_DESCRIPTOR 类型
 typedef struct {
     EFI_PHYSICAL_ADDRESS BaseAddress;
@@ -13,7 +23,7 @@ typedef struct {
     UINT32 CacheAttributes;
 } DEVICE_MEMORY_DESCRIPTOR;
 
-// 内存映射表，根据 TWRP 和 /proc/iomem 数据生成
+// 内存映射表
 DEVICE_MEMORY_DESCRIPTOR DeviceMemoryDescriptor[] = {
     { 0x80894000, 0x0000C000, AddMem, SYS_MEM, Conv, WriteBack },   // System RAM
     { 0x8E71C000, 0x0000E400, AddMem, SYS_MEM, Conv, WriteBack },   // System RAM
