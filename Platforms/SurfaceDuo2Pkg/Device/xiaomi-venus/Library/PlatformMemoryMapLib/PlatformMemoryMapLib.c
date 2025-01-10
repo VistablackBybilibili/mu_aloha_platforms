@@ -1,31 +1,46 @@
-#include <Library/PlatformMemoryMapLib.h>
+#include <Uefi.h>
+#include <Library/UefiBootServicesTableLib.h>
+#include <Library/BaseMemoryLib.h>
+#include <Library/DebugLib.h>
 
-// Platform Memory Map
-GLOBAL_REMOVE_IF_UNREFERENCED DEVICE_MEMORY_DESCRIPTOR gDeviceMemoryDescriptorEx[] = {
+// 定义 DEVICE_MEMORY_DESCRIPTOR 类型
+typedef struct {
+    EFI_PHYSICAL_ADDRESS BaseAddress;
+    EFI_PHYSICAL_ADDRESS Length;
+    UINT32 Attributes;
+    UINT32 Type;
+    UINT32 MemoryType;
+    UINT32 CacheAttributes;
+} DEVICE_MEMORY_DESCRIPTOR;
 
-    // System RAM Regions
-    {"System RAM", 0x80894000, 0x0056C000, AddMem, SYS_MEM, SYS_MEM_CAP, Reserv, WRITE_BACK_XN},
-    {"System RAM", 0x8E71C000, 0x008E4000, AddMem, SYS_MEM, SYS_MEM_CAP, Reserv, WRITE_BACK_XN},
-    {"System RAM", 0x8E900000, 0x00700000, AddMem, SYS_MEM, SYS_MEM_CAP, Reserv, WRITE_BACK_XN},
-    {"System RAM", 0x9F000000, 0x18700000, AddMem, SYS_MEM, SYS_MEM_CAP, Reserv, WRITE_BACK_XN},
-    {"System RAM", 0xC0000000, 0x16000000, AddMem, SYS_MEM, SYS_MEM_CAP, Reserv, WRITE_BACK_XN},
-    {"System RAM", 0xD6800000, 0x02000000, AddMem, SYS_MEM, SYS_MEM_CAP, Reserv, WRITE_BACK_XN},
-    {"System RAM", 0xE0A00000, 0x29000000, AddMem, SYS_MEM, SYS_MEM_CAP, Reserv, WRITE_BACK_XN},
-
-    // Reserved Regions
-    {"Reserved", 0xA0080000, 0x022BFFFF, AddMem, MEM_RES, UNCACHEABLE, Conv, UNCACHED_UNBUFFERED_XN},
-    {"Reserved", 0xA24F0000, 0x0056AFFF, AddMem, MEM_RES, UNCACHEABLE, Conv, UNCACHED_UNBUFFERED_XN},
-    {"Reserved", 0xE2A00000, 0x02400000, AddMem, MEM_RES, UNCACHEABLE, Conv, UNCACHED_UNBUFFERED_XN},
-    {"Reserved", 0xEB400000, 0x01480000, AddMem, MEM_RES, UNCACHEABLE, Conv, UNCACHED_UNBUFFERED_XN},
-
-    // GPU Regions
-    {"GPU Memory", 0x03D00000, 0x003C0000, AddDev, MMAP_IO, INITIALIZED, Conv, UNCACHED_UNBUFFERED_XN},
-    {"GPU Reserved", 0x03DC5000, 0x0000A000, AddDev, MMAP_IO, INITIALIZED, Conv, UNCACHED_UNBUFFERED_XN},
-
-    // Peripheral Regions
-    {"UFS", 0x01D84000, 0x00006000, AddDev, MMAP_IO, INITIALIZED, Conv, UNCACHED_UNBUFFERED_XN},
-    {"USB", 0x0A60C100, 0x0000183B, AddDev, MMAP_IO, INITIALIZED, Conv, UNCACHED_UNBUFFERED_XN},
-
-    // Terminator
-    {"Terminator", 0, 0, 0, 0, 0, 0, 0}
+// 内存映射表，根据 TWRP 和 /proc/iomem 数据生成
+DEVICE_MEMORY_DESCRIPTOR DeviceMemoryDescriptor[] = {
+    { 0x80894000, 0x0000C000, AddMem, SYS_MEM, Conv, WriteBack },   // System RAM
+    { 0x8E71C000, 0x0000E400, AddMem, SYS_MEM, Conv, WriteBack },   // System RAM
+    { 0x8E900000, 0x00700000, AddMem, SYS_MEM, Conv, WriteBack },   // System RAM
+    { 0x9F000000, 0x184FFFFF, AddMem, SYS_MEM, Conv, WriteBack },   // System RAM
+    { 0xC0000000, 0x16000000, AddMem, SYS_MEM, Conv, WriteBack },   // System RAM
+    { 0xD6800000, 0x02000000, AddMem, SYS_MEM, Conv, WriteBack },   // System RAM
+    { 0xE0A00000, 0x276FFFFFF, AddMem, SYS_MEM, Conv, WriteBack },  // System RAM
+    { 0x370C00000, 0x019600000, AddDev, MMIO, NS_DEVICE, UNCACHED }, // Reserved Memory
+    { 0x37E63A000, 0x0000001000, AddDev, MMIO, NS_DEVICE, UNCACHED }, // Reserved
+    { 0x37E63D000, 0x0000001000, AddDev, MMIO, NS_DEVICE, UNCACHED }, // Reserved
+    { 0x37E63E000, 0x0000001000, AddDev, MMIO, NS_DEVICE, UNCACHED }, // Reserved
+    { 0x37E63F000, 0x000005000, AddDev, MMIO, NS_DEVICE, UNCACHED }, // Reserved
+    { 0x37E645000, 0x018000000, AddDev, MMIO, NS_DEVICE, UNCACHED }, // Reserved
 };
+
+// 数组大小
+UINTN DeviceMemoryDescriptorCount = sizeof(DeviceMemoryDescriptor) / sizeof(DeviceMemoryDescriptor[0]);
+
+// 主函数实现，返回内存描述符数组
+VOID
+EFIAPI
+GetPlatformMemoryMap (
+    OUT DEVICE_MEMORY_DESCRIPTOR **MemoryMap,
+    OUT UINTN *DescriptorCount
+    )
+{
+    *MemoryMap = DeviceMemoryDescriptor;
+    *DescriptorCount = DeviceMemoryDescriptorCount;
+}
